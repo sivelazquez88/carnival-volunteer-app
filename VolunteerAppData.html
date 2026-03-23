@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volunteer Scheduling Portal</title>
+    <style>
+        /* DARK AWESOME THEME */
+        body { background-color: #121212; color: #FFFFFF; font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 0; display: flex; justify-content: center; }
+        #app-container { background-color: #2A2A2A; max-width: 600px; width: 100%; margin: 20px; padding: 30px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.5); }
+        #school-banner { width: 100%; height: 150px; background-color: #444; background-image: url('https://via.placeholder.com/600x150/333333/FFFFFF?text=INSERT+YOUR+SCHOOL+BANNER+HERE'); background-size: cover; background-position: center; border-radius: 8px; margin-bottom: 20px; }
+        h2 { color: #FF3131; text-align: center; }
+        p { line-height: 1.6; font-size: 16px; }
+        label { font-weight: bold; margin-top: 15px; display: block; color: #ccc;}
+        input[type="text"], input[type="tel"], select { width: 100%; padding: 12px; margin-top: 8px; margin-bottom: 20px; background-color: #121212; color: #FFF; border: 2px solid #555; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
+        input:focus, select:focus { border-color: #FF3131; outline: none; }
+        .btn { background-color: #FF3131; color: white; border: none; padding: 15px 20px; width: 100%; font-size: 18px; font-weight: bold; border-radius: 6px; cursor: pointer; margin-top: 10px; transition: 0.3s; }
+        .btn:hover { background-color: #D02020; }
+        .language-btns { display: flex; gap: 10px; }
+        .language-btns .btn { background-color: #555; }
+        .language-btns .btn:hover { background-color: #FF3131; }
+        .hidden { display: none; }
+        .checkbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;}
+        .checkbox-grid label { margin-top: 0; font-weight: normal; color: #FFF; display: flex; align-items: center;}
+        .checkbox-grid input { margin-right: 10px; width: 20px; height: 20px; accent-color: #FF3131;}
+        #loading { text-align: center; font-size: 18px; color: #FF3131; font-weight: bold; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    <div id="school-banner"></div>
+
+    <div id="step-language">
+        <h2>Welcome / ¡Bienvenido!</h2>
+        <p style="text-align: center;">Please select your language / Por favor seleccione su idioma</p>
+        <div class="language-btns">
+            <button class="btn" onclick="setLanguage('en')">English</button>
+            <button class="btn" onclick="setLanguage('es')">Español</button>
+        </div>
+    </div>
+
+    <div id="step-name" class="hidden">
+        <h2 id="title-name">Welcome!</h2>
+        <label id="lbl-name">What is your Parent Name?</label>
+        <input type="text" id="parentName" placeholder="John Doe">
+        
+        <label id="lbl-shift-type">What type of shift are you looking for?</label>
+        <select id="shiftType" onchange="showShiftOptions()">
+            <option value="">-- Select an Option --</option>
+            <option value="Carnival" id="opt-carnival">Carnival Food Booth or Runner</option>
+            <option value="Weekday Prep" id="opt-weekday">Weekday Food Prep / Any Job (Mon-Fri)</option>
+        </select>
+    </div>
+
+    <div id="step-carnival" class="hidden">
+        <h2 id="title-carnival">Carnival Shifts</h2>
+        <p id="desc-carnival">Select a booth and an available time slot below.</p>
+        
+        <label id="lbl-booth">Select Booth / Role:</label>
+        <select id="boothSelection">
+            <option value="Popcorn">🍿 Popcorn</option>
+            <option value="Snowcones">🍧 Snowcones</option>
+            <option value="Duros">🥨 Duros</option>
+            <option value="Nachos">🧀 Nachos</option>
+            <option value="Food Serving">🍽️ Food Serving</option>
+            <option value="Sodas">🥤 Sodas</option>
+            <option value="Runners">🏃‍♂️ Runners (Restocking)</option>
+        </select>
+
+        <label id="lbl-time">Select Time Slot:</label>
+        <select id="timeSelection">
+            <option value="2:00 PM - 4:00 PM (Setup/Prep)">2:00 PM - 4:00 PM (Set up & Prep)</option>
+            <option value="4:00 PM - 5:30 PM (Serving)">4:00 PM - 5:30 PM (Serving / Selling)</option>
+            <option value="5:30 PM - 7:00 PM (Serving)">5:30 PM - 7:00 PM (Serving / Selling)</option>
+            <option value="7:00 PM - Clean Up">7:00 PM - Clean Up</option>
+        </select>
+        <button class="btn" id="btn-next-carnival" onclick="goToPhone()">Continue</button>
+    </div>
+
+    <div id="step-weekday" class="hidden">
+        <h2 id="title-weekday">Weekday Food Prep / Any Job</h2>
+        <p id="desc-weekday">Select the days and hours you are available.</p>
+        
+        <label id="lbl-days">Available Days (Select up to 3):</label>
+        <div class="checkbox-grid" id="day-grid">
+            <label><input type="checkbox" value="Monday" class="day-cb"> Monday</label>
+            <label><input type="checkbox" value="Tuesday" class="day-cb"> Tuesday</label>
+            <label><input type="checkbox" value="Wednesday" class="day-cb"> Wednesday</label>
+            <label><input type="checkbox" value="Thursday" class="day-cb"> Thursday</label>
+            <label><input type="checkbox" value="Friday" class="day-cb"> Friday</label>
+        </div>
+
+        <label id="lbl-hours" style="margin-top: 20px;">Available Hours:</label>
+        <div class="checkbox-grid" id="hour-grid">
+            <label><input type="checkbox" value="8:00 AM" class="hour-cb"> 8:00 AM</label>
+            <label><input type="checkbox" value="9:00 AM" class="hour-cb"> 9:00 AM</label>
+            <label><input type="checkbox" value="10:00 AM" class="hour-cb"> 10:00 AM</label>
+            <label><input type="checkbox" value="11:00 AM" class="hour-cb"> 11:00 AM</label>
+            <label><input type="checkbox" value="12:00 PM" class="hour-cb"> 12:00 PM</label>
+            <label><input type="checkbox" value="1:00 PM" class="hour-cb"> 1:00 PM</label>
+            <label><input type="checkbox" value="2:00 PM" class="hour-cb"> 2:00 PM</label>
+            <label><input type="checkbox" value="3:00 PM" class="hour-cb"> 3:00 PM</label>
+            <label><input type="checkbox" value="4:00 PM" class="hour-cb"> 4:00 PM</label>
+        </div>
+        <button class="btn" id="btn-next-weekday" onclick="goToPhone()">Continue</button>
+    </div>
+
+    <div id="step-phone" class="hidden">
+        <h2 id="title-phone">Almost Done!</h2>
+        <label id="lbl-phone">Please provide your phone number:</label>
+        <input type="tel" id="phoneNumber" placeholder="(555) 555-5555">
+        <button class="btn" id="btn-submit" onclick="submitToGoogle()">Submit Volunteer Schedule</button>
+        <div id="loading" class="hidden">Sending to Database... ⏳</div>
+    </div>
+
+    <div id="step-confirm" class="hidden" style="text-align: center;">
+        <h2 id="title-confirm">Thank You!</h2>
+        <p id="msg-confirm" style="font-size: 18px; color: #4CAF50; font-weight: bold;">Your volunteer shift and contact info have been recorded.</p>
+        <p id="msg-seeyou">We will see you at the event!</p>
+    </div>
+</div>
+
+<script>
+    // YOUR EXACT LINK IS ALREADY PLUGGED IN HERE:
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyLVYQ1GceY8kgyxULaniA2YYdcap3lLW2xUwVRZw4x_AKsOBrVB8iK9v_hE-kaeSgB/exec";
+
+    let currentLang = 'en';
+    const text = {
+        en: {
+            titleName: "Welcome!", lblName: "What is your Parent Name?", lblShiftType: "What type of shift are you looking for?", optCarnival: "Carnival Food Booth or Runner", optWeekday: "Weekday Food Prep / Any Job (Mon-Fri)", titleCarnival: "Carnival Shifts", descCarnival: "Select a booth and an available time slot below.", lblBooth: "Select Booth / Role:", lblTime: "Select Time Slot:", btnNext: "Continue", titleWeekday: "Weekday Food Prep / Any Job", descWeekday: "Select the days and hours you are available.", lblDays: "Available Days (Select up to 3):", lblHours: "Available Hours:", titlePhone: "Almost Done!", lblPhone: "Please provide your phone number so we can reach you:", btnSubmit: "Submit Volunteer Schedule", titleConfirm: "Thank You, ", msgConfirm: "Your volunteer shift and contact info have been recorded.", msgSeeYou: "We will see you at the event!", loading: "Sending to Database... ⏳"
+        },
+        es: {
+            titleName: "¡Bienvenido!", lblName: "¿Cuál es su nombre (Padre/Madre)?", lblShiftType: "¿Qué tipo de turno busca?", optCarnival: "Puesto de comida del Carnaval o Corredor", optWeekday: "Preparación de comida / Cualquier trabajo (Lun-Vie)", titleCarnival: "Turnos del Carnaval", descCarnival: "Seleccione un puesto y un horario disponible a continuación.", lblBooth: "Seleccione Puesto / Rol:", lblTime: "Seleccione Horario:", btnNext: "Continuar", titleWeekday: "Preparación de Comida / Cualquier trabajo", descWeekday: "Seleccione los días y horas que está disponible.", lblDays: "Días Disponibles (Máximo 3):", lblHours: "Horas Disponibles:", titlePhone: "¡Casi Listo!", lblPhone: "Por favor proporcione su número de teléfono para que podamos contactarlo:", btnSubmit: "Enviar Horario de Voluntario", titleConfirm: "¡Gracias, ", msgConfirm: "Su turno de voluntario y su información de contacto han sido registrados.", msgSeeYou: "¡Nos vemos en el evento!", loading: "Enviando a la Base de Datos... ⏳"
+        }
+    };
+
+    function setLanguage(lang) {
+        currentLang = lang; const t = text[lang];
+        document.getElementById('title-name').innerText = t.titleName; document.getElementById('lbl-name').innerText = t.lblName; document.getElementById('lbl-shift-type').innerText = t.lblShiftType; document.getElementById('opt-carnival').innerText = t.optCarnival; document.getElementById('opt-weekday').innerText = t.optWeekday; document.getElementById('title-carnival').innerText = t.titleCarnival; document.getElementById('desc-carnival').innerText = t.descCarnival; document.getElementById('lbl-booth').innerText = t.lblBooth; document.getElementById('lbl-time').innerText = t.lblTime; document.getElementById('btn-next-carnival').innerText = t.btnNext; document.getElementById('title-weekday').innerText = t.titleWeekday; document.getElementById('desc-weekday').innerText = t.descWeekday; document.getElementById('lbl-days').innerText = t.lblDays; document.getElementById('lbl-hours').innerText = t.lblHours; document.getElementById('btn-next-weekday').innerText = t.btnNext; document.getElementById('title-phone').innerText = t.titlePhone; document.getElementById('lbl-phone').innerText = t.lblPhone; document.getElementById('btn-submit').innerText = t.btnSubmit; document.getElementById('loading').innerText = t.loading;
+        document.getElementById('step-language').classList.add('hidden'); document.getElementById('step-name').classList.remove('hidden');
+    }
+
+    function showShiftOptions() {
+        const type = document.getElementById('shiftType').value; const name = document.getElementById('parentName').value;
+        if(!name) { alert(currentLang === 'en' ? "Please enter your name first." : "Por favor ingrese su nombre primero."); document.getElementById('shiftType').value = ""; return; }
+        document.getElementById('step-carnival').classList.add('hidden'); document.getElementById('step-weekday').classList.add('hidden');
+        if (type === 'Carnival') document.getElementById('step-carnival').classList.remove('hidden');
+        else if (type === 'Weekday Prep') document.getElementById('step-weekday').classList.remove('hidden');
+    }
+
+    function goToPhone() {
+        if (document.getElementById('shiftType').value === 'Weekday Prep') {
+            const checkedDays = document.querySelectorAll('.day-cb:checked').length;
+            if (checkedDays === 0 || checkedDays > 3) { alert(currentLang === 'en' ? "Please select between 1 and 3 days." : "Por favor seleccione entre 1 y 3 días."); return; }
+        }
+        document.getElementById('step-carnival').classList.add('hidden'); document.getElementById('step-weekday').classList.add('hidden'); document.getElementById('step-name').classList.add('hidden'); document.getElementById('step-phone').classList.remove('hidden');
+    }
+
+    function submitToGoogle() {
+        const phone = document.getElementById('phoneNumber').value;
+        const name = document.getElementById('parentName').value;
+        const type = document.getElementById('shiftType').value;
+        
+        if(!phone) { alert(currentLang === 'en' ? "Please enter your phone number." : "Por favor ingrese su número de teléfono."); return; }
+        if(!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("PASTE_YOUR")) { alert("Developer Error: Google Script URL is missing!"); return; }
+
+        let selectionData = "";
+        if (type === 'Carnival') {
+            const booth = document.getElementById('boothSelection').value;
+            const time = document.getElementById('timeSelection').value;
+            selectionData = "Booth: " + booth + " | Time: " + time;
+        } else {
+            const days = Array.from(document.querySelectorAll('.day-cb:checked')).map(cb => cb.value).join(', ');
+            const hours = Array.from(document.querySelectorAll('.hour-cb:checked')).map(cb => cb.value).join(', ');
+            selectionData = "Days: " + days + " | Hours: " + hours;
+        }
+
+        // Hide button, show loading
+        document.getElementById('btn-submit').classList.add('hidden');
+        document.getElementById('loading').classList.remove('hidden');
+
+        // Bundle data
+        const payload = {
+            name: name,
+            language: currentLang === 'en' ? "English" : "Spanish",
+            shiftType: type,
+            selections: selectionData,
+            phone: phone
+        };
+
+        // Send to Google Sheets
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors', 
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }).then(() => {
+            // Show Success Screen
+            document.getElementById('step-phone').classList.add('hidden');
+            document.getElementById('step-confirm').classList.remove('hidden');
+            document.getElementById('title-confirm').innerText = text[currentLang].titleConfirm + name + "!";
+        }).catch(err => {
+            alert("Error sending to database. Please try again.");
+            document.getElementById('btn-submit').classList.remove('hidden');
+            document.getElementById('loading').classList.add('hidden');
+        });
+    }
+</script>
+</body>
+</html>
